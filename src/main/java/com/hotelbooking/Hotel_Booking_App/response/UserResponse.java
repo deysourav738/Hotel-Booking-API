@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class UserResponse {
     String name;
     String email;
+    String role;
 }

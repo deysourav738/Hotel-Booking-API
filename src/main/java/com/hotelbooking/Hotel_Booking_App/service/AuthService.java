@@ -4,6 +4,7 @@ import com.hotelbooking.Hotel_Booking_App.commons.Const;
 import com.hotelbooking.Hotel_Booking_App.model.User;
 import com.hotelbooking.Hotel_Booking_App.repo.UserRepo;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class AuthService {
 
@@ -21,6 +24,9 @@ public class AuthService {
 
     @Autowired
     JWTService jwtService;
+
+    @Autowired
+    UserService userService;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -64,5 +70,27 @@ public class AuthService {
 
         // Add cookie to the response
         response.addCookie(cookie);
+    }
+
+    public String getToken(HttpServletRequest request) {
+        String token = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("accessToken".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
+        return token;
+    }
+
+    public Optional<User> getUserFromToken(String token) {
+        if (token == null || jwtService.isTokenExpired(token)) {
+            return Optional.empty();
+        }
+        String username = jwtService.extractUserName(token);
+        return userService.findByEmail(username);
     }
 }

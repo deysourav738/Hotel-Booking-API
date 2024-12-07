@@ -1,5 +1,6 @@
 package com.hotelbooking.Hotel_Booking_App.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hotelbooking.Hotel_Booking_App.commons.UserRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -29,4 +30,9 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "hotel_id", nullable = false)
+    private Hotel hotel;
 }

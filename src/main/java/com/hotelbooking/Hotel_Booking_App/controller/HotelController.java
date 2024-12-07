@@ -1,6 +1,8 @@
 package com.hotelbooking.Hotel_Booking_App.controller;
 
+import com.hotelbooking.Hotel_Booking_App.mapper.HotelMapper;
 import com.hotelbooking.Hotel_Booking_App.model.Hotel;
+import com.hotelbooking.Hotel_Booking_App.response.HotelResponse;
 import com.hotelbooking.Hotel_Booking_App.service.HotelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,9 +25,9 @@ public class HotelController {
      * Get all hotels (Accessible to both Admin and User)
      */
     @GetMapping
-    public ResponseEntity<List<Hotel>> getAllHotels() {
+    public ResponseEntity<List<HotelResponse>> getAllHotels() {
         List<Hotel> hotels = hotelService.getAllHotels();
-        return new ResponseEntity<>(hotels, HttpStatus.OK);
+        return new ResponseEntity<>(HotelMapper.toHotelResponse(hotels), HttpStatus.OK);
     }
 
     /**
@@ -34,8 +36,7 @@ public class HotelController {
     @GetMapping("/{id}")
     public ResponseEntity<Hotel> getHotelById(@PathVariable("id") Long hotelId) {
         Optional<Hotel> hotel = hotelService.getHotelById(hotelId);
-        return hotel.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return hotel.map(value -> new ResponseEntity<>(value, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     /**
@@ -55,8 +56,7 @@ public class HotelController {
     @PutMapping("/{id}")
     public ResponseEntity<Hotel> updateHotel(@PathVariable("id") Long hotelId, @RequestBody Hotel hotel) {
         Optional<Hotel> updatedHotel = Optional.ofNullable(hotelService.updateHotel(hotelId, hotel));
-        return updatedHotel.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return updatedHotel.map(value -> new ResponseEntity<>(value, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     /**

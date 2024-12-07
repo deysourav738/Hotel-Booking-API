@@ -32,16 +32,17 @@ public class AuthController {
     private JWTService jwtService;
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@RequestBody User user) {
+    public ResponseEntity<UserResponse> register(@RequestBody User user, HttpServletResponse response) {
         try {
-            if (user.getRole() == null) {
-                user.setRole(UserRole.USER);
-            }
+            User validationUser = new User();
+            validationUser.setEmail(user.getEmail());
+            validationUser.setPassword(user.getPassword());
             authService.save(user);
+            authService.setJwtCookie(authService.validate(validationUser), response, 1800);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>(new UserResponse(user.getName(), user.getEmail()), HttpStatus.CREATED);
+        return new ResponseEntity<>(new UserResponse(user.getName(), user.getEmail(), user.getRole().name()), HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
@@ -54,6 +55,7 @@ public class AuthController {
             if (foundUser.isPresent()) {
                 userResponse.setName(foundUser.get().getName());
                 userResponse.setEmail(foundUser.get().getEmail());
+                userResponse.setRole(foundUser.get().getRole().name());
             }
             return new ResponseEntity<>(userResponse, HttpStatus.OK);
         } catch (Exception e) {
@@ -63,21 +65,10 @@ public class AuthController {
 
     @GetMapping("/user")
     public ResponseEntity<UserResponse> getUser(HttpServletRequest request) {
-        String token = null;
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("accessToken".equals(cookie.getName())) {
-                    token = cookie.getValue();
-                    break;
-                }
-            }
-        }
-
+        String token = authService.getToken(request);
         if (token == null || jwtService.isTokenExpired(token)) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED); // Unauthorized if token is missing or expired
         }
-
         // Extract user details from the token
         String username = jwtService.extractUserName(token);
         Optional<User> user = userService.findByEmail(username);
@@ -85,6 +76,7 @@ public class AuthController {
         if (user.isPresent()) {
             userResponse.setName(user.get().getName());
             userResponse.setEmail(user.get().getEmail());
+            userResponse.setRole(user.get().getRole().name());
         }
         return new ResponseEntity<>(userResponse, HttpStatus.OK);
     }
